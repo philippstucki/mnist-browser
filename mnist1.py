@@ -9,8 +9,11 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 # the model is: y = softmax(W*x + b)
 
+LOG_DIR = './summaries'
+
 
 def main():
+    testWriter = tf.summary.FileWriter(LOG_DIR + '/test')
     mnist = input_data.read_data_sets("./MNIST-data", one_hot=True)
 
     x = tf.placeholder(tf.float32, [None, 784])
@@ -32,18 +35,31 @@ def main():
     tf.global_variables_initializer().run()
 
     # train the model
-    for (_) in range(1000):
+    for (i) in range(200):
         batch_xs, batch_ys = mnist.train.next_batch(100)
         sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
-    # test the model
-    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    print(sess.run(
-        accuracy,
-        feed_dict={x: mnist.test.images,
-                   y_: mnist.test.labels}
-    ))
+        with tf.name_scope('test'):
+            correct_prediction = tf.equal(
+                tf.argmax(y, 1),
+                tf.argmax(y_, 1)
+            )
+            test_accuracy = tf.reduce_mean(tf.cast(
+                correct_prediction,
+                tf.float32
+            ))
+            foo = tf.summary.scalar('accuracy', test_accuracy)
+            merged = tf.summary.merge_all()
+
+        # test the model
+        if i % 10 == 0:
+            summary, acc = sess.run(
+                [merged, test_accuracy],
+                feed_dict={x: mnist.test.images,
+                           y_: mnist.test.labels}
+            )
+            print(acc)
+            testWriter.add_summary(summary, i)
 
 
 if __name__ == "__main__":

@@ -1,2 +1,4 @@
 MNIST-data
 .env
+summaries
+.vscode/.ropeproject
