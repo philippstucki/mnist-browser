@@ -29,27 +29,29 @@ def main():
             logits=y
         )
     )
-    train_step = tf.train.GradientDescentOptimizer(0.5).minimize(loss)
+    train_step = tf.train.GradientDescentOptimizer(
+        learning_rate=0.2
+    ).minimize(loss)
 
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
 
-    # train the model
+    correct_prediction = tf.equal(
+        tf.argmax(y, 1),
+        tf.argmax(y_, 1)
+    )
+    test_accuracy = tf.reduce_mean(tf.cast(
+        correct_prediction,
+        tf.float32
+    ))
+    tf.summary.scalar('accuracy', test_accuracy)
+    tf.summary.histogram('weights', W)
+    merged = tf.summary.merge_all()
+    testWriter.add_graph(sess.graph)
+
     for (i) in range(200):
         batch_xs, batch_ys = mnist.train.next_batch(100)
         sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
-
-        with tf.name_scope('test'):
-            correct_prediction = tf.equal(
-                tf.argmax(y, 1),
-                tf.argmax(y_, 1)
-            )
-            test_accuracy = tf.reduce_mean(tf.cast(
-                correct_prediction,
-                tf.float32
-            ))
-            foo = tf.summary.scalar('accuracy', test_accuracy)
-            merged = tf.summary.merge_all()
 
         # test the model
         if i % 10 == 0:
