@@ -14,6 +14,7 @@ LOG_DIR = './summaries'
 
 def main():
     mnist = input_data.read_data_sets("./MNIST-data", one_hot=True)
+    sess = tf.InteractiveSession()
 
     x = tf.placeholder(tf.float32, [None, 784])
     W = tf.Variable(tf.zeros([784, 10]))
@@ -28,10 +29,9 @@ def main():
         )
     )
     train_step = tf.train.GradientDescentOptimizer(
-        learning_rate=0.2
+        learning_rate=0.5
     ).minimize(loss)
 
-    sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
     trainWriter = tf.summary.FileWriter(LOG_DIR + '/train', sess.graph)
     testWriter = tf.summary.FileWriter(LOG_DIR + '/test', sess.graph)
@@ -43,6 +43,7 @@ def main():
 
     tf.summary.scalar('accuracy', accuracy)
     tf.summary.histogram('weights', W)
+    tf.summary.scalar('loss', loss)
     merged = tf.summary.merge_all()
 
     for (i) in range(200):
