@@ -13,7 +13,6 @@ LOG_DIR = './summaries'
 
 
 def main():
-    testWriter = tf.summary.FileWriter(LOG_DIR + '/test')
     mnist = input_data.read_data_sets("./MNIST-data", one_hot=True)
 
     x = tf.placeholder(tf.float32, [None, 784])
@@ -21,10 +20,9 @@ def main():
     b = tf.Variable(tf.zeros([10]))
     y = tf.matmul(x, W) + b
     y_ = tf.placeholder(tf.float32, [None, 10])
-    print(y_, y)
 
     loss = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.softmax_cross_entropy_with_logits_v2(
             labels=y_,
             logits=y
         )
@@ -35,28 +33,28 @@ def main():
 
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
+    trainWriter = tf.summary.FileWriter(LOG_DIR + '/train', sess.graph)
+    testWriter = tf.summary.FileWriter(LOG_DIR + '/test', sess.graph)
 
-    correct_prediction = tf.equal(
-        tf.argmax(y, 1),
-        tf.argmax(y_, 1)
-    )
-    test_accuracy = tf.reduce_mean(tf.cast(
-        correct_prediction,
-        tf.float32
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+    accuracy = tf.reduce_mean(tf.cast(
+        correct_prediction, tf.float32
     ))
-    tf.summary.scalar('accuracy', test_accuracy)
+
+    tf.summary.scalar('accuracy', accuracy)
     tf.summary.histogram('weights', W)
     merged = tf.summary.merge_all()
-    testWriter.add_graph(sess.graph)
 
     for (i) in range(200):
         batch_xs, batch_ys = mnist.train.next_batch(100)
-        sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+        summary_train, acc = sess.run([merged, train_step], feed_dict={
+                                      x: batch_xs, y_: batch_ys})
+        trainWriter.add_summary(summary_train, i)
 
         # test the model
         if i % 10 == 0:
             summary, acc = sess.run(
-                [merged, test_accuracy],
+                [merged, accuracy],
                 feed_dict={x: mnist.test.images,
                            y_: mnist.test.labels}
             )
