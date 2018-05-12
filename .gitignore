@@ -1,4 +1,4 @@
-MNIST-data
-.env
-summaries
+python/MNIST-data
+python/.env
+python/summaries
 .vscode/.ropeproject

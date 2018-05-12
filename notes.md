@@ -1,6 +1,3 @@
-# Questions
+# Convert Saved Model to Web Format
 
-*   Estimator?
-*   Input function?
-*   Num. epochs (input function) vs. steps(Estimator.train)?
-*
+`tensorflowjs_converter --input_format=tf_saved_model --output_node_names=y --saved_model_tags=serve ./saved ./saved_web`
