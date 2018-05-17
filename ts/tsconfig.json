@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "jsx": "react",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "noUnusedLocals": true,
+        "allowUnusedLabels": false,
+        "allowUnreachableCode": false,
+        "strictNullChecks": true
+    }
+}
