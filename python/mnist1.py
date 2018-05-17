@@ -44,6 +44,7 @@ def main():
 
     tf.summary.scalar('accuracy', accuracy)
     tf.summary.histogram('weights', W)
+    tf.summary.histogram('biases', b)
     tf.summary.scalar('loss', loss)
     merged = tf.summary.merge_all()
 
