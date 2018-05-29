@@ -4,6 +4,8 @@ import {
     NamedTensorMap,
     FrozenModel
 } from '@tensorflow/tfjs-converter';
+import { Mnist } from './Mnist';
+// import { image } from '@tensorflow/tfjs-core';
 
 const MODEL_URL = '/saved_web/tensorflowjs_model.pb';
 const WEIGHTS_URL = '/saved_web/weights_manifest.json';
@@ -32,7 +34,7 @@ const runPaint = (
     let paintStarted = false;
 
     if (ctx) {
-        ctx.lineWidth = 35;
+        ctx.lineWidth = 25;
         ctx.strokeStyle = '#000';
         ctx.fillStyle = '#fff';
         ctx.lineCap = 'round';
@@ -70,20 +72,19 @@ const loadModel = async () => {
     return await loadFrozenModel(MODEL_URL, WEIGHTS_URL);
 };
 
-// const drawPreprocessed = (imageData: ImageData) => {
-//     const ctx = get2DContext(getPreprocessedCanvasElement());
-//     if (ctx) {
-//         ctx.putImageData(imageData, 0, 0);
-//     }
-// };
-
 const predict = (model: FrozenModel, imageData: ImageData) => {
-    const resizedImage = tfc.image.resizeNearestNeighbor(
-        tfc.fromPixels(imageData),
-        [28, 28]
-    );
+    const boundingBox = Mnist.Image.getBoundigBox(imageData);
+    console.log(boundingBox);
+    const cropped = Mnist.Image.crop(imageData, boundingBox);
+    console.log(Mnist.Image.getCenterOfMass(cropped));
+
+    const resizedImage = tfc.image.resizeBilinear(tfc.fromPixels(cropped), [
+        28,
+        28
+    ]);
 
     tfc.toPixels(resizedImage, getPreprocessedCanvasElement());
+
     const x = resizedImage
         .slice(0, [28, 28, 1])
         .reshape([1, IMG_SIZE_FLAT])
@@ -91,12 +92,12 @@ const predict = (model: FrozenModel, imageData: ImageData) => {
         .div(tfc.fill([1, IMG_SIZE_FLAT], 255));
 
     const inverted = tfc.ones([1, IMG_SIZE_FLAT]).sub(x);
-    inverted.print();
+    console.log(inverted.dataSync().toString());
 
     const input = {
         x: inverted
     } as NamedTensorMap;
-    return (model.execute(input) as tfc.Tensor).flatten();
+    return tfc.softmax(model.execute(input) as tfc.Tensor).flatten();
 };
 
 const main = async () => {
