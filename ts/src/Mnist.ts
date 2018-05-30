@@ -84,9 +84,35 @@ export namespace Mnist {
             };
         };
 
-        // export const centerToSquare = (imageData: ImageData) => {
-        //     let
-        // }
+        export const centerToSquare = (imageData: ImageData): ImageData => {
+            const isLandscape = imageData.width > imageData.height;
+            const size = isLandscape ? imageData.width : imageData.height;
+            const offsetX = isLandscape
+                ? 0
+                : Math.floor((size - imageData.width) / 2);
+            const offsetY = isLandscape
+                ? Math.floor((size - imageData.height) / 2)
+                : 0;
+
+            let centeredData = new Uint8ClampedArray(size * size * 4);
+            for (let i = 0; i < size * size * 4; i++) {
+                centeredData[i] = 255;
+            }
+
+            for (let y = 0; y < imageData.height; y++) {
+                for (let x = 0; x < imageData.width; x++) {
+                    const i = 4 * (y * imageData.width + x);
+                    const i_centered = 4 * ((y + offsetY) * size + x + offsetX);
+
+                    centeredData[i_centered] = imageData.data[i];
+                    centeredData[i_centered + 1] = imageData.data[i + 1];
+                    centeredData[i_centered + 2] = imageData.data[i + 2];
+                    centeredData[i_centered + 3] = imageData.data[i + 3];
+                }
+            }
+
+            return new ImageData(centeredData, size, size);
+        };
     }
 
     /*

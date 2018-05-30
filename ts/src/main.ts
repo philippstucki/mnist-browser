@@ -34,7 +34,7 @@ const runPaint = (
     let paintStarted = false;
 
     if (ctx) {
-        ctx.lineWidth = 25;
+        ctx.lineWidth = 40;
         ctx.strokeStyle = '#000';
         ctx.fillStyle = '#fff';
         ctx.lineCap = 'round';
@@ -77,8 +77,9 @@ const predict = (model: FrozenModel, imageData: ImageData) => {
     console.log(boundingBox);
     const cropped = Mnist.Image.crop(imageData, boundingBox);
     console.log(Mnist.Image.getCenterOfMass(cropped));
+    const centered = Mnist.Image.centerToSquare(cropped);
 
-    const resizedImage = tfc.image.resizeBilinear(tfc.fromPixels(cropped), [
+    const resizedImage = tfc.image.resizeBilinear(tfc.fromPixels(centered), [
         28,
         28
     ]);
