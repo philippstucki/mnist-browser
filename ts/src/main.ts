@@ -92,7 +92,6 @@ const predict = (model: FrozenModel, imageData: ImageData) => {
 const main = async () => {
     const paintCanvas = getPaintCanvasElement();
     const ctx = get2DContext(paintCanvas);
-    tfc.setBackend('cpu');
     if (paintCanvas && ctx) {
         const model = await loadModel();
         window.setInterval(() => {

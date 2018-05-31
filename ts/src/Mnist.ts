@@ -23,7 +23,9 @@ export namespace Mnist {
             return data;
         };
 
-        // crops white border from given image
+        /**
+         * calculates fitting bounding box for given image on white background
+         */
         export const getBoundigBox = (imageData: ImageData): BoundingBox => {
             const pixelIndex = (x: number, y: number) =>
                 4 * (y * imageData.width + x);
@@ -53,6 +55,9 @@ export namespace Mnist {
             };
         };
 
+        /**
+         * crops image to given bounding box
+         */
         export const crop = (
             imageData: ImageData,
             bb: BoundingBox
@@ -74,6 +79,9 @@ export namespace Mnist {
             return new ImageData(croppedData, width, height);
         };
 
+        /**
+         * calculates center of mass for the given image
+         */
         export const getCenterOfMass = (
             imageData: ImageData
         ): CoordinateTuple => {
@@ -97,6 +105,9 @@ export namespace Mnist {
             };
         };
 
+        /**
+         * center image to a square image with size given by larger side of input image
+         */
         export const centerToSquare = (imageData: ImageData): ImageData => {
             const isLandscape = imageData.width > imageData.height;
             const size = isLandscape ? imageData.width : imageData.height;
@@ -127,6 +138,9 @@ export namespace Mnist {
             return new ImageData(centeredData, size, size);
         };
 
+        /**
+         * resizes image using nearest neighbour method
+         */
         export const resizeNearestNeighbor = (
             imageData: ImageData,
             newSize: SizeTuple
