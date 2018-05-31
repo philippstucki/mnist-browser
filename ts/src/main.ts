@@ -5,7 +5,6 @@ import {
     FrozenModel
 } from '@tensorflow/tfjs-converter';
 import { Mnist } from './Mnist';
-// import { image } from '@tensorflow/tfjs-core';
 
 const MODEL_URL = '/saved_web/tensorflowjs_model.pb';
 const WEIGHTS_URL = '/saved_web/weights_manifest.json';
@@ -34,7 +33,7 @@ const runPaint = (
     let paintStarted = false;
 
     if (ctx) {
-        ctx.lineWidth = 40;
+        ctx.lineWidth = 32;
         ctx.strokeStyle = '#000';
         ctx.fillStyle = '#fff';
         ctx.lineCap = 'round';
@@ -73,21 +72,10 @@ const loadModel = async () => {
 };
 
 const predict = (model: FrozenModel, imageData: ImageData) => {
-    const boundingBox = Mnist.Image.getBoundigBox(imageData);
-    console.log(boundingBox);
-    const cropped = Mnist.Image.crop(imageData, boundingBox);
-    console.log(Mnist.Image.getCenterOfMass(cropped));
-    const centered = Mnist.Image.centerToSquare(cropped);
-
-    const resizedImage = tfc.image.resizeBilinear(tfc.fromPixels(centered), [
-        28,
-        28
-    ]);
-
-    tfc.toPixels(resizedImage, getPreprocessedCanvasElement());
-
-    const x = resizedImage
-        .slice(0, [28, 28, 1])
+    const preprocessedImage = tfc.fromPixels(Mnist.Image.preprocess(imageData));
+    tfc.toPixels(preprocessedImage, getPreprocessedCanvasElement());
+    const x = preprocessedImage
+        .slice(0, [28, 28, 1]) // extracts channel R
         .reshape([1, IMG_SIZE_FLAT])
         .cast('float32')
         .div(tfc.fill([1, IMG_SIZE_FLAT], 255));

@@ -1,14 +1,29 @@
-// import * as tfc from '@tensorflow/tfjs-core';
-
 export namespace Mnist {
     export namespace Image {
-        // crops white border from given image
+        export interface CoordinateTuple {
+            x: number;
+            y: number;
+        }
+        export interface SizeTuple {
+            width: number;
+            height: number;
+        }
         export interface BoundingBox {
             x1: number;
             y1: number;
             x2: number;
             y2: number;
         }
+
+        const initImageArrayToWhite = (size: SizeTuple) => {
+            const data = new Uint8ClampedArray(size.width * size.height * 4);
+            for (let i = 0; i < data.length; i++) {
+                data[i] = 255;
+            }
+            return data;
+        };
+
+        // crops white border from given image
         export const getBoundigBox = (imageData: ImageData): BoundingBox => {
             const pixelIndex = (x: number, y: number) =>
                 4 * (y * imageData.width + x);
@@ -59,11 +74,9 @@ export namespace Mnist {
             return new ImageData(croppedData, width, height);
         };
 
-        export interface Tuple {
-            x: number;
-            y: number;
-        }
-        export const getCenterOfMass = (imageData: ImageData): Tuple => {
+        export const getCenterOfMass = (
+            imageData: ImageData
+        ): CoordinateTuple => {
             const i = (x: number, y: number) => 4 * (y * imageData.width + x);
 
             let sumX = 0;
@@ -94,10 +107,10 @@ export namespace Mnist {
                 ? Math.floor((size - imageData.height) / 2)
                 : 0;
 
-            let centeredData = new Uint8ClampedArray(size * size * 4);
-            for (let i = 0; i < size * size * 4; i++) {
-                centeredData[i] = 255;
-            }
+            let centeredData = initImageArrayToWhite({
+                width: size,
+                height: size
+            });
 
             for (let y = 0; y < imageData.height; y++) {
                 for (let x = 0; x < imageData.width; x++) {
@@ -113,11 +126,74 @@ export namespace Mnist {
 
             return new ImageData(centeredData, size, size);
         };
-    }
 
-    /*
-    1) resize to 20x20 preserving aspect ratio
-    2) center in 28x28 canvas using center of mass to be in the center of the canvas
-    */
-    // const preprocessImage = (document: Document, imageData: ImageData) =>
+        export const resizeNearestNeighbor = (
+            imageData: ImageData,
+            newSize: SizeTuple
+        ) => {
+            const factorX = newSize.width / imageData.width;
+            const factorY = newSize.height / imageData.height;
+            let resizedData = new Uint8ClampedArray(
+                newSize.width * newSize.height * 4
+            );
+
+            for (let y = 0; y < newSize.height; y++) {
+                for (let x = 0; x < newSize.width; x++) {
+                    const i = 4 * (y * newSize.height + x);
+
+                    const x_old = Math.floor(x / factorX);
+                    const y_old = Math.floor(y / factorY);
+                    const i_old = 4 * (y_old * imageData.height + x_old);
+
+                    resizedData[i] = imageData.data[i_old];
+                    resizedData[i + 1] = imageData.data[i_old + 1];
+                    resizedData[i + 2] = imageData.data[i_old + 2];
+                    resizedData[i + 3] = imageData.data[i_old + 3];
+                }
+            }
+
+            return new ImageData(resizedData, newSize.width, newSize.height);
+        };
+
+        /**
+         * preprocesses image using the same rules used to preprocess MNIST images
+         *
+         * - resize to 20x20 preserving aspect ratio
+         * - center in 28x28 canvas using center of mass of 20x20 image
+         */
+        export const preprocess = (imageData: ImageData) => {
+            const DIGITSIZE = 20;
+            const ENDSIZE = 28;
+            const ppData = initImageArrayToWhite({
+                width: ENDSIZE,
+                height: ENDSIZE
+            });
+            const boundingBox = getBoundigBox(imageData);
+            const resized = resizeNearestNeighbor(
+                centerToSquare(crop(imageData, boundingBox)),
+                {
+                    width: DIGITSIZE,
+                    height: DIGITSIZE
+                }
+            );
+            const com = getCenterOfMass(resized);
+
+            const offsetX = 4 + DIGITSIZE / 2 - com.x;
+            const offsetY = 4 + DIGITSIZE / 2 - com.y;
+
+            for (let y = 0; y < resized.height; y++) {
+                for (let x = 0; x < resized.width; x++) {
+                    const i_resized = 4 * (y * resized.height + x);
+                    const i_preprocessed =
+                        4 * ((y + offsetY) * ENDSIZE + x + offsetX);
+                    ppData[i_preprocessed] = resized.data[i_resized];
+                    ppData[i_preprocessed + 1] = resized.data[i_resized + 1];
+                    ppData[i_preprocessed + 2] = resized.data[i_resized + 2];
+                    ppData[i_preprocessed + 3] = resized.data[i_resized + 3];
+                }
+            }
+
+            return new ImageData(ppData, ENDSIZE, ENDSIZE);
+        };
+    }
 }
