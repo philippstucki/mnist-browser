@@ -23,7 +23,8 @@ const getClearElement = () => document.getElementById('clear');
 
 const runPaint = (
     canvasElement: HTMLCanvasElement | null,
-    clearElement: HTMLElement | null
+    clearElement: HTMLElement | null,
+    mouseUpCallback: () => void
 ) => {
     if (!canvasElement || !clearElement) {
         throw new Error('Some elements are not defined.');
@@ -33,7 +34,7 @@ const runPaint = (
     let paintStarted = false;
 
     if (ctx) {
-        ctx.lineWidth = 32;
+        ctx.lineWidth = 20;
         ctx.strokeStyle = '#000';
         ctx.fillStyle = '#fff';
         ctx.lineCap = 'round';
@@ -42,7 +43,13 @@ const runPaint = (
         ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
         const mouseDownHandler = (e: MouseEvent) => (paintStarted = true);
-        const mouseUpHandler = (e: MouseEvent) => (paintStarted = false);
+        const mouseUpHandler = (e: MouseEvent) => {
+            paintStarted = false;
+            mouseUpCallback();
+        };
+        const mouseLeaveHandler = (e: MouseEvent) => {
+            paintStarted = false;
+        };
         const mouseMoveHandler = (e: MouseEvent) => {
             const x = e.pageX - canvasElement.offsetLeft;
             const y = e.pageY - canvasElement.offsetTop;
@@ -58,7 +65,7 @@ const runPaint = (
 
         canvasElement.addEventListener('mousedown', mouseDownHandler, false);
         canvasElement.addEventListener('mouseup', mouseUpHandler, false);
-        canvasElement.addEventListener('mouseleave', mouseUpHandler, false);
+        canvasElement.addEventListener('mouseleave', mouseLeaveHandler, false);
         canvasElement.addEventListener('mousemove', mouseMoveHandler, false);
 
         clearElement.addEventListener('click', () =>
@@ -92,15 +99,16 @@ const predict = (model: FrozenModel, imageData: ImageData) => {
 const main = async () => {
     const paintCanvas = getPaintCanvasElement();
     const ctx = get2DContext(paintCanvas);
+    tfc.setBackend('cpu');
     if (paintCanvas && ctx) {
         const model = await loadModel();
-        window.setInterval(() => {
+
+        runPaint(getPaintCanvasElement(), getClearElement(), () => {
             const y = predict(model, getImageData(ctx));
             y.print();
             console.log(`prediction: ${y.argMax()}`);
-        }, 2000);
+        });
     }
 };
 
 main();
-runPaint(getPaintCanvasElement(), getClearElement());

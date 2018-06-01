@@ -165,6 +165,52 @@ export namespace Mnist {
                     resizedData[i + 3] = imageData.data[i_old + 3];
                 }
             }
+            return new ImageData(resizedData, newSize.width, newSize.height);
+        };
+
+        /**
+         * resizes image using bilinear interpolation
+         */
+        export const resizeBilinear = (
+            imageData: ImageData,
+            newSize: SizeTuple
+        ) => {
+            const factorX = imageData.width / newSize.width;
+            const factorY = imageData.height / newSize.height;
+            let resizedData = new Uint8ClampedArray(
+                newSize.width * newSize.height * 4
+            );
+            const indexI = (x: number, y: number) =>
+                4 * (imageData.height * y + x) + 1;
+
+            for (let y = 0; y < newSize.height; y++) {
+                for (let x = 0; x < newSize.width; x++) {
+                    const i = 4 * (y * newSize.height + x);
+
+                    const fractionalX = x * factorX;
+                    const fractionalY = y * factorY;
+                    const x0 = Math.floor(fractionalX);
+                    const y0 = Math.floor(fractionalY);
+                    const dx = fractionalX - x0;
+                    const dy = fractionalY - y0;
+
+                    const A = imageData.data[indexI(x0, y0)];
+                    const B = imageData.data[indexI(x0 + 1, y0)];
+                    const C = imageData.data[indexI(x0, y0 + 2)];
+                    const D = imageData.data[indexI(x0 + 1, y0 + 1)];
+
+                    const value =
+                        A * (1 - dx) * (1 - dy) +
+                        B * dx * (1 - dy) +
+                        C * (1 - dx) * dy +
+                        D * dx * dy;
+
+                    resizedData[i] = value;
+                    resizedData[i + 1] = value;
+                    resizedData[i + 2] = value;
+                    resizedData[i + 3] = 255;
+                }
+            }
 
             return new ImageData(resizedData, newSize.width, newSize.height);
         };
@@ -183,13 +229,14 @@ export namespace Mnist {
                 height: ENDSIZE
             });
             const boundingBox = getBoundigBox(imageData);
-            const resized = resizeNearestNeighbor(
+            const resized = resizeBilinear(
                 centerToSquare(crop(imageData, boundingBox)),
                 {
-                    width: DIGITSIZE,
-                    height: DIGITSIZE
+                    width: 20,
+                    height: 20
                 }
             );
+
             const com = getCenterOfMass(resized);
 
             const offsetX = 4 + DIGITSIZE / 2 - com.x;

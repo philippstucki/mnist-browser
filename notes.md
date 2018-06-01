@@ -1,3 +1,9 @@
+# Todo
+
+*   display prediction scores for all digits
+*   predict on mouseup
+*   add link to show example digits from mnist dataset
+
 # Convert Saved Model to Web Format
 
 *   https://github.com/tensorflow/tfjs-converter
