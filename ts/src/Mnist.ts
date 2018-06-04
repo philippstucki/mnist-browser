@@ -178,10 +178,10 @@ export namespace Mnist {
             const factorX = imageData.width / newSize.width;
             const factorY = imageData.height / newSize.height;
             let resizedData = new Uint8ClampedArray(
-                newSize.width * newSize.height * 4
+                newSize.width * newSize.width * 4
             );
             const indexI = (x: number, y: number) =>
-                4 * (imageData.height * y + x) + 1;
+                4 * (y * imageData.height + x) + 1;
 
             for (let y = 0; y < newSize.height; y++) {
                 for (let x = 0; x < newSize.width; x++) {
@@ -196,8 +196,10 @@ export namespace Mnist {
 
                     const A = imageData.data[indexI(x0, y0)];
                     const B = imageData.data[indexI(x0 + 1, y0)];
-                    const C = imageData.data[indexI(x0, y0 + 2)];
+                    const C = imageData.data[indexI(x0, y0 + 1)];
                     const D = imageData.data[indexI(x0 + 1, y0 + 1)];
+
+                    // console.log(A, B, C, D, dx, dy);
 
                     const value =
                         A * (1 - dx) * (1 - dy) +
@@ -211,7 +213,6 @@ export namespace Mnist {
                     resizedData[i + 3] = 255;
                 }
             }
-
             return new ImageData(resizedData, newSize.width, newSize.height);
         };
 
@@ -232,8 +233,8 @@ export namespace Mnist {
             const resized = resizeBilinear(
                 centerToSquare(crop(imageData, boundingBox)),
                 {
-                    width: 20,
-                    height: 20
+                    width: DIGITSIZE,
+                    height: DIGITSIZE
                 }
             );
 

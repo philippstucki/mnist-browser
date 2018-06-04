@@ -34,7 +34,7 @@ const runPaint = (
     let paintStarted = false;
 
     if (ctx) {
-        ctx.lineWidth = 20;
+        ctx.lineWidth = 30;
         ctx.strokeStyle = '#000';
         ctx.fillStyle = '#fff';
         ctx.lineCap = 'round';
