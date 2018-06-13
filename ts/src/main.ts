@@ -78,6 +78,18 @@ const loadModel = async () => {
     return await loadFrozenModel(MODEL_URL, WEIGHTS_URL);
 };
 
+const updatePrediction = (result: number, score: number): void => {
+    const resEl = document.getElementById('result');
+    if (resEl) {
+        resEl.innerHTML = result.toString();
+    }
+
+    const scoreEl = document.getElementById('score');
+    if (scoreEl) {
+        scoreEl.innerHTML = (Math.round(score * 100) / 100).toString();
+    }
+};
+
 const predict = (model: FrozenModel, imageData: ImageData) => {
     const preprocessedImage = tfc.fromPixels(Mnist.Image.preprocess(imageData));
     tfc.toPixels(preprocessedImage, getPreprocessedCanvasElement());
@@ -88,8 +100,6 @@ const predict = (model: FrozenModel, imageData: ImageData) => {
         .div(tfc.fill([1, IMG_SIZE_FLAT], 255));
 
     const inverted = tfc.ones([1, IMG_SIZE_FLAT]).sub(x);
-    console.log(inverted.dataSync().toString());
-
     const input = {
         x: inverted
     } as NamedTensorMap;
@@ -105,8 +115,12 @@ const main = async () => {
 
         runPaint(getPaintCanvasElement(), getClearElement(), () => {
             const y = predict(model, getImageData(ctx));
-            y.print();
-            console.log(`prediction: ${y.argMax()}`);
+            const max = y
+                .argMax()
+                .asScalar()
+                .dataSync()[0];
+            updatePrediction(0, 0);
+            updatePrediction(max, y.dataSync()[max]);
         });
     }
 };
